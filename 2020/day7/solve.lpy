@@ -1,0 +1,75 @@
+(comment https://adventofcode.com/2020/day/7)
+
+(comment
+    this results in a list, each element of which is a list of three elements:
+     - the container bag's color
+     - the contained bag's color
+     - the number of bags contained)
+(def edges
+    (flatmap (composition
+        (# (. replace %0) "," "")
+        (# slice %0 0 -2)
+        (# (. split %0))
+        (# let (
+                words %0
+                container (join " " & (slice words 0 2))
+                content (map (# list
+                        (join " " & (slice words (+ %0 1) (+ %0 3)))
+                        (int (nth words %0)))
+                    (range 4 (len words) 4)))
+            (map
+                (# list container (first %0) (second %0))
+                content)))
+    (filter
+        (# not (in "no other bags" %0))
+        ((. readlines (open "input.txt"))))))
+
+(def bag_types
+    (set & (flatmap (# list (first %0) (second %0)) edges)))
+
+(def bag_contains
+    (reduce
+        (# let (
+                acc %0
+                (from to count) %1
+                edge (dict (list to count))
+                existing_edges (dict$get acc from (dict))
+                updated_edges (dict$set existing_edges to count))
+            (dict$set acc from updated_edges))
+        (dict)
+        edges))
+
+(def bag_contained_in
+    (reduce
+        (# let (
+                acc %0
+                (from to count) %1
+                edge (dict (list to count))
+                existing_edges (dict$get acc to (dict))
+                updated_edges (dict$set existing_edges from count))
+            (dict$set acc to updated_edges))
+        (dict)
+        edges))
+
+(defn reachable (node)
+    (reduce
+        (# set$union %0 (reachable %1))
+        (set node)
+        (dict$get bag_contained_in node (dict))))
+
+(defn task1 ()
+    (dec (len (reachable "shiny gold"))))
+
+(defn bag_content (bag)
+    (sum (map
+        (# let ((bag count) %0)
+            (* count (+ 1 (bag_content bag))))
+        (dict$items (dict$get bag_contains bag (dict))))))
+
+(defn task2 ()
+    (bag_content "shiny gold"))
+
+(do
+    (print (task1))
+    (print (task2)))
+

@@ -1,0 +1,97 @@
+(comment https://adventofcode.com/2020/day/8)
+
+(def instructions
+    (map (composition
+            (# (. strip %0))
+            (# (. split %0))
+            (# list (first %0) (int (second %0))))
+        ((. readlines (open "input.txt")))))
+
+(def TRACE 0)
+
+(defn inc_pc (status)
+    (dict$set status "program_counter"
+        (inc (: status "program_counter"))))
+
+(defn execute_acc (arg status)
+    (inc_pc (dict$set status "accumulator"
+        (+ arg (: status "accumulator")))))
+
+(defn execute_jmp (arg status)
+    (dict$set status "program_counter"
+        (+ arg (: status "program_counter"))))
+
+(defn execute_instruction (position status)
+    (let ((opcode arg) (nth instructions position))
+        (do (if (> TRACE 0) (print opcode arg status) (do))
+            (if (= opcode "acc")
+                (execute_acc arg status)
+            (if (= opcode "jmp")
+                (execute_jmp arg status)
+            (inc_pc status))))))
+
+(defn task1 ()
+    (letfn (aux (status visited)
+            (let (position (: status "program_counter"))
+                (if (in position visited)
+                    (: status "accumulator")
+                    (aux
+                        (execute_instruction position status)
+                        (set$add visited position)))))
+        (aux (dict
+                (list "program_counter" 0)
+                (list "accumulator" 0))
+            (set))))
+
+(defn has_loops (status visited)
+    (let (position (: status "program_counter"))
+        (if (>= position (len instructions))
+            False
+        (if (in position visited)
+            True
+            (has_loops
+                (execute_instruction position status)
+                (set$add visited position))))))
+
+(defn aux (status visited can_change)
+    (let (position (: status "program_counter"))
+        (if (>= position (len instructions))
+            (list True (: status "accumulator"))
+        (if (in position visited)
+            (list False 0)
+            (let ((opcode arg) (nth instructions position))
+                (if (= opcode "acc")
+                    (aux (execute_acc arg status) (set$add visited position) can_change)
+                (if (= opcode "nop")
+                    (let (
+                            temp_status ((. copy status))
+                            temp_visited ((. copy visited))
+                            (success accumulator)
+                                (if can_change
+                                    (aux (execute_jmp arg temp_status) (set$add temp_visited position) False)
+                                    (list False 0)))
+                        (if success
+                            (list True accumulator)
+                            (aux (inc_pc status) (set$add visited position) can_change)))
+                    (let (
+                            temp_status ((. copy status))
+                            temp_visited ((. copy visited))
+                            (success accumulator)
+                                (if can_change
+                                    (aux (inc_pc temp_status) (set$add temp_visited position) False)
+                                    (list False 0)))
+                        (if success
+                            (list True accumulator)
+                            (aux (execute_jmp arg status) (set$add visited position) can_change))))))))))
+
+(defn task2 ()
+    (second (aux (dict
+                (list "program_counter" 0)
+                (list "accumulator" 0))
+            (set)
+            True)))
+
+(do
+    (print (task1))
+    (print (task2)))
+

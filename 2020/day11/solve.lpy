@@ -1,0 +1,70 @@
+(comment https://adventofcode.com/2020/day/11)
+
+(def small_input False)
+(def fname (if small_input "small.txt" "input.txt"))
+
+(def seats ((. readlines (open fname))))
+(def nrows (len seats))
+(def ncols (dec (len (first seats))))
+(def coords (flatmap
+    (# let (row %0) (map (# list row %0) (range ncols)))
+    (range nrows)))
+
+(defn seat? (r c) (= "L" (: (: seats r) c)))
+
+(defn occupied? (occupancy r c)
+    (if (and (>= r 0) (< r nrows) (>= c 0) (< c ncols) (seat? r c))
+        (< 0 (: occupancy (+ c (* r nrows))))
+        False))
+
+(defn print_occupancy (occupancy)
+    (print ((. join "\n") (map (# let (r %0)
+            ((. join "") (map (# let (c %0)
+                (if (seat? r c)
+                    (if (occupied? occupancy r c) "#" "L")
+                    "."))
+            (range ncols))))
+        (range nrows)))))
+
+(defn count_occupied_adjacent_to (occupancy r c)
+    (sum
+        (occupied? occupancy (dec r) (dec c))
+        (occupied? occupancy (dec r) c)
+        (occupied? occupancy (dec r) (inc c))
+        (occupied? occupancy r (dec c))
+        (occupied? occupancy r (inc c))
+        (occupied? occupancy (inc r) (dec c))
+        (occupied? occupancy (inc r) c)
+        (occupied? occupancy (inc r) (inc c))))
+
+(defn next_state (occupancy)
+    (tuple & (map (# let (
+            (r c) %0
+            num (count_occupied_adjacent_to occupancy r c)
+            occ (occupied? occupancy r c))
+        (if (seat? r c)
+            (if (and (= num 0) (not occ))
+                True
+            (if (and (>= num 4) occ)
+                False
+                occ))
+            False))
+        coords)))
+
+(defns task1_aux (occupancy visited)
+    (do (print_occupancy occupancy) (print "\n")
+    (if (in occupancy visited)
+        occupancy
+        (task1_aux (next_state occupancy) (set$add visited occupancy)))))
+
+(defn task1 ()
+    (let (final_state (task1_aux (tuple & (map (# bool 0) coords)) (set)))
+        (sum & final_state)))
+
+
+(defn task2 () 0)
+
+(do
+    (print (task1))
+    (print (task2)))
+

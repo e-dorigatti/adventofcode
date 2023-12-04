@@ -1,0 +1,20 @@
+(comment https://adventofcode.com/2020/day/1)
+(pyimport_from itertools combinations)
+
+(defn part1 (numbers)
+    (let (n (first (filter
+            (# in (- 2020 %0) numbers)
+            numbers)))
+        (* n (- 2020 n))))
+
+(defn part2 (numbers)
+    (let ((a b) (first (filter
+            (# in (- 2020 (first %0) (second %0))
+                numbers)
+            (combinations numbers 2))))
+        (* a b (- 2020 a b))))
+
+(let (numbers (set & (map int ((. readlines (open "day1input.txt"))))))
+    (do
+        (print (part1 numbers))
+        (print (part2 numbers))))

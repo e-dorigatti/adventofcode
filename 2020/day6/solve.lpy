@@ -1,0 +1,19 @@
+(comment https://adventofcode.com/2020/day/6)
+
+(defn task1 (answers)
+    (sum (map len (map (# reduce set$union (map (# set & %0) %0)) answers))))
+
+(defn task2 (answers)
+    (sum (map len (map (# reduce set$intersection (map (# set & %0) %0)) answers))))
+
+(def answers
+    (reduce
+        (# if (= %1 "")
+            (list$append %0 (list))
+            (do (list$append (last %0) %1) %0))
+        (list (list))
+        (map (# (. strip %0)) ((. readlines (open "input.txt"))))))
+
+(do
+    (print (task1 answers))
+    (print (task2 answers)))

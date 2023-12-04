@@ -1,0 +1,39 @@
+(comment https://adventofcode.com/2020/day/15)
+
+(def small_input False)
+(def fname (if small_input "small.txt" "input.txt"))
+
+(def numbers (map int ((. split ((. read (open fname)))) ",")))
+
+(defn next_turn (state turn)
+    (let (last_spoken (: state "last_spoken")
+            last_turn (: state "last_turn")
+            last_spoken_turns (: last_turn last_spoken)
+            spoken (if (> (len last_spoken_turns) 1)
+                (- (: last_spoken_turns -1) (: last_spoken_turns -2))
+                0))
+        (do
+            (:< state "last_spoken" spoken)
+            (:< last_turn spoken
+                (if (in spoken last_turn)
+                    (list (last (: last_turn spoken)) turn)
+                    (list turn)))
+            state)))
+
+(defn play (num_turns)
+    (: (reduce next_turn
+            (dict
+                (list "last_spoken" (last numbers))
+                (list "last_turn" (dict & (map
+                    (# list (second %0) (list (first %0)))
+                    (enumerate numbers)))))
+            (range (len numbers) num_turns))
+        "last_spoken"))
+
+(defn task1 () (play 2020))
+(defn task2 () (play 30000000))
+
+(do
+    (print (task1))
+    (print (task2)))
+

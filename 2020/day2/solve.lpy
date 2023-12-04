@@ -1,0 +1,41 @@
+(comment https://adventofcode.com/2020/day/2)
+
+(defn count_chars (password)
+    (letfn (aux (i acc)
+            (if (< i (len password))
+                (let (
+                        char (nth password i)
+                        count ((. get acc) char 0))
+                     (aux (inc i) (dict$set acc char (inc count))))
+                 acc))
+        (aux 0 (dict))))
+
+(defn password_valid_1 (specs)
+    (let (
+            (a b c p) specs
+            count ((. get (count_chars p)) c 0))
+        (and (>= count a) (<= count b))))
+
+(defn password_valid_2 (specs)
+    (let (
+            (a b c p) specs
+            e1 (= c (nth p (dec a)))
+            e2 (= c (nth p (dec b))))
+        (and
+            (or e1 e2)
+            (not (and e1 e2)))))
+
+(defn count_valid (fn lines)
+    (len (filter fn lines)))
+
+(def specs (map
+    (# let (
+            (nums char password) ((. split %0) " ")
+            (n1 n2) (map int ((. split nums) "-"))
+            char (first char))
+        (list n1 n2 char password))
+    ((. readlines (open "input_day2.txt")))))
+
+(do
+    (print (count_valid password_valid_1 specs))
+    (print (count_valid password_valid_2 specs)))

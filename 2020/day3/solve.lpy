@@ -1,0 +1,32 @@
+(comment https://adventofcode.com/2020/day/3)
+
+(defn count_trees (field slope_h slope_v)
+    (let (
+            width (len (first field))
+            height (len field)
+            coords (map
+                (# list %0 (mod (* slope_h (int (/ %0 slope_v))) width))
+                (range 0 height slope_v))
+            trees (filter
+                (# = "#" (nth (nth field (first %0)) (second %0)))
+                coords))
+        (len trees)))
+
+(defn task1 (field)
+    (count_trees field 3 1))
+
+(defn task2 (field)
+    (*
+        (count_trees field 1 1)
+        (count_trees field 3 1)
+        (count_trees field 5 1)
+        (count_trees field 7 1)
+        (count_trees field 1 2)))
+
+(def field (map
+    (# (. strip %0))
+    ((. readlines (open "input_day3.txt")))))
+
+(do
+    (print (task1 field))
+    (print (task2 field)))

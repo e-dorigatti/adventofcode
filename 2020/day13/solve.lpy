@@ -1,0 +1,48 @@
+(comment https://adventofcode.com/2020/day/12)
+
+(pyimport_from math ceil)
+
+(def small_input False)
+(def fname (if small_input "small.txt" "input.txt"))
+
+(def lines ((. readlines (open fname))))
+(def earliest (int (first lines)))
+(def all_buses ((. split (second lines)) ","))
+
+(defn task1 ()
+    (let (buses (map int (filter (# not (= "x" %0)) all_buses)))
+        (* & (reduce
+            (# if (< (second %1) (second %0)) %1 %0)
+            (map (# list %0 (- (* %0 (ceil (/ earliest %0))) earliest)) buses)))))
+
+
+(comment finds the inverse of a mod n, e.g. the inverse of 4 mod 9 is 7, since 7*4 mod 9 = 1)
+(defn mod_inverse (a n)
+    (letfn (aux (r newr t newt)
+            (if (= 0 newr)
+                (list r t)
+                (let (quot (// r newr))
+                    (aux newr (- r (* quot newr)) newt (- t (* quot newt))))))
+        (let ((r t) (aux n (mod a n) 0 1))
+            (if (> r 1)
+                -1
+            (if (< t 0)
+                (+ t n)
+                t)))))
+
+(comment find the number x so that x mod as[i] = ns[i] for all i)
+(defn chinese_remainder (as ns)
+    (let (big_n (* & ns)
+            ys (map (# // big_n %0) ns)
+            zs (map (# mod_inverse (: ys %0) (: ns %0)) (range (len ns))))
+        (mod (sum & (map (# * (: as %0) (: ys %0) (: zs %0)) (range (len ns)))) big_n)))
+
+(defn task2 ()
+    (let (bus_ids (filter (# not (= "x" (: all_buses %0))) (range (len all_buses)))
+            bus_numbers (map (# int (: all_buses %0)) bus_ids))
+        (chinese_remainder (map (# * -1 %0) bus_ids) bus_numbers)))
+
+(do
+    (print (task1))
+    (print (task2)))
+

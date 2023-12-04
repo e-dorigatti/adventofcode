@@ -1,0 +1,80 @@
+(comment https://adventofcode.com/2020/day/12)
+
+(def small_input False)
+(def fname (if small_input "small.txt" "input.txt"))
+
+(def instructions ((. readlines (open fname))))
+
+(defn navigate (state instruction)
+    (let (order (first instruction)
+            distance (int (slice instruction 1 (len instruction))))
+        (if (= order "N")
+            (:< state 0 (+ distance (: state 0)))
+        (if (= order "E")
+            (:< state 90 (+ distance (: state 90)))
+        (if (= order "S")
+            (:< state 180 (+ distance (: state 180)))
+        (if (= order "W")
+            (:< state 270 (+ distance (: state 270)))
+        (if (= order "F")
+            (:< state (: state "f") (+ distance (: state (: state "f"))))
+        (if (= order "R")
+            (:< state "f" (mod (+ (: state "f") distance) 360))
+            (:< state "f" (mod (- (: state "f") distance) 360))))))))))
+
+(defn task1 ()
+    (let (state (reduce navigate
+            (dict (list 0 0) (list 90 0) (list 180 0) (list 270 0) (list "f" 90))
+            instructions))
+        (sum (abs (- (: state 0) (: state 180))) (abs (- (: state 90) (: state 270))))))
+
+(defn navigate_with_waypoint (state instruction)
+    (let (order (first instruction)
+            distance (int (slice instruction 1 (len instruction))))
+        (if (= order "N")
+            (:< state "w0" (+ distance (: state "w0")))
+        (if (= order "E")
+            (:< state "w90" (+ distance (: state "w90")))
+        (if (= order "S")
+            (:< state "w180" (+ distance (: state "w180")))
+        (if (= order "W")
+            (:< state "w270" (+ distance (: state "w270")))
+        (let (waypoint_north (- (: state "w0") (: state "w180"))
+                waypoint_east (- (: state "w90") (: state "w270")))
+            (if (= order "F")
+                (let (ship_north (: state "sn")
+                        ship_east (: state "se"))
+                    (:< (:< state
+                        "sn" (+ ship_north (* distance waypoint_north)))
+                        "se" (+ ship_east (* distance waypoint_east))))
+            (if (or (and (= order "R") (= distance 90))
+                    (and (= order "L") (= distance 270)))
+                (dict$update state (dict
+                    (list "w0" (- 0 waypoint_east))
+                    (list "w90" waypoint_north)
+                    (list "w180" 0)
+                    (list "w270" 0)))
+            (if (or (and (= order "R") (= distance 270))
+                    (and (= order "L") (= distance 90)))
+                (dict$update state (dict
+                    (list "w0" waypoint_east)
+                    (list "w90" (- 0 waypoint_north))
+                    (list "w180" 0)
+                    (list "w270" 0)))
+                (dict$update state (dict
+                    (list "w0" (- 0 waypoint_north))
+                    (list "w90" (- 0 waypoint_east))
+                    (list "w180" 0)
+                    (list "w270" 0)))))))))))))
+
+(defn task2 ()
+    (let (state (reduce
+            navigate_with_waypoint
+            (dict (list "w0" 1) (list "w90" 10) (list "w180" 0) (list "w270" 0) (list "sn" 0) (list "se" 0))
+            instructions))
+        (sum (abs (: state "sn")) (abs (: state "se")))))
+
+(do
+    (print (task1))
+    (print (task2)))
+

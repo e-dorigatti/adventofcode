@@ -1,0 +1,55 @@
+(comment https://adventofcode.com/2020/day/4)
+
+(def specs
+    (let (
+            text ((. read (open "input.txt")))
+            text_nonl ((. replace text) "\n\n" "$$")
+            entries_joined ((. replace text_nonl) "\n" " ")
+            entries ((. split entries_joined) "$$"))
+        (map (composition
+                (# (. split %0))
+                (# map (# (. split %0) ":") %0)
+                (# dict & %0))
+            entries)))
+
+(defn task1 ()
+    (len (filter
+        (# or
+            (and (in "cid" %0) (= 8 (len %0)))
+            (and (not (in "cid" %0)) (= 7 (len %0))))
+        specs)))
+
+
+(defn are_passport_fields_valid (passport)
+    (let (
+            byr (dict$get passport "byr" None)
+            iyr (dict$get passport "iyr" None)
+            eyr (dict$get passport "eyr" None)
+            hgt (dict$get passport "hgt" None)
+            hcl (dict$get passport "hcl" None)
+            ecl (dict$get passport "ecl" None)
+            pid (dict$get passport "pid" None))
+        (list
+            (and (!= None byr) (<= 1920 (int byr)) (>= 2002 (int byr)))
+            (and (!= None iyr) (<= 2010 (int iyr)) (>= 2020 (int iyr)))
+            (and (!= None eyr) (<= 2020 (int eyr)) (>= 2030 (int eyr)))
+            (and (!= None hgt) (> (len hgt) 2) (let (
+                    hgt_n (int (slice hgt 0 (- (len hgt) 2))))
+                (if ((. endswith hgt) "cm")
+                    (and (<= 150 hgt_n) (>= 193 hgt_n))
+                    (and (<= 59 hgt_n) (>= 76 hgt_n)))))
+            (and (!= None hcl) (= "#" (first hcl))
+                (all (map (# in %0 "0123456789abcdef") (slice hcl 1 (len hcl)))))
+            (and (!= None ecl) (in ecl (set "amb" "blu" "brn" "gry" "grn" "hzl" "oth")))
+            (and (!= None pid) (= 9 (len pid)) (all (map (# in %0 "0123456789") pid))))))
+
+(defn task2 ()
+    (len (filter
+        (# all (are_passport_fields_valid %0))
+        specs)))
+
+
+(do
+    (print (task1))
+    (print (task2)))
+

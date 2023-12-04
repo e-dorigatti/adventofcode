@@ -1,0 +1,49 @@
+(comment https://adventofcode.com/2020/day/10)
+
+(def joltages
+    (map int ((. readlines (open "input.txt")))))
+
+
+(defn task1_aux (joltages index differences_count)
+    (if (>= index (len joltages))
+        differences_count
+        (let (
+                diff (- (: joltages index) (: joltages (dec index)))
+                diff_count (: differences_count diff))
+            (task1_aux
+                joltages
+                (inc index)
+                (:< differences_count diff (inc diff_count))))))
+
+
+(defn task1 ()
+    (let (diff_counts
+            (task1_aux
+                (+ (list 0) (sorted joltages) (list (+ 3 (max joltages))))
+                1
+                (dict & (map (# list %0 0) (range 1 4)))))
+        (* (: diff_counts 1) (: diff_counts 3))))
+
+
+(defn task2_aux (joltages index paths_count)
+    (if (= index -1)
+        (: paths_count 0)
+        (task2_aux
+            joltages
+            (dec index)
+            (let (this_jolt (: joltages index))
+                (:< paths_count this_jolt (+
+                    (dict$get paths_count (+ this_jolt 1) 0)
+                    (dict$get paths_count (+ this_jolt 2) 0)
+                    (dict$get paths_count (+ this_jolt 3) 0)))))))
+
+(defn task2 ()
+    (task2_aux
+        (+ (list 0) (sorted joltages) (list (+ 3 (max joltages))))
+        (dec (len joltages))
+        (dict (list (max joltages) 1))))
+
+(do
+    (print (task1))
+    (print (task2)))
+

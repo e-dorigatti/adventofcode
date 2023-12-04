@@ -1,0 +1,111 @@
+(comment https://adventofcode.com/2020/day/12)
+
+(def small_input False)
+(def fname (if small_input "small.txt" "input.txt"))
+
+(def lines ((. readlines (open fname))))
+
+(defn process_instruction_part1 (state instruction)
+    (let (parts ((. split instruction)))
+        (if (= (first parts) "mask")
+                (:<  (:< state
+                    "and_mask" (int ((. replace (: parts 2)) "X" "1") 2))
+                    "or_mask" (int ((. replace (: parts 2)) "X" "0") 2))
+                (let (value (int (: parts 2))
+                        address (int (slice (first parts) 4 (dec (len (first parts)))))
+                        write (&& (|| value (: state "or_mask")) (: state "and_mask")))
+                    (:< state "memory" (:< (: state "memory") address write))))))
+
+(defn task1 ()
+    (let (state (reduce
+                process_instruction_part1
+                (dict
+                    (list "memory" (dict))
+                    (list "and_mask" (int (* "1" 36)))
+                    (list "or_mask" (int (* "0" 36))))
+                lines))
+        (reduce (# + %0 %1) (dict$values (: state "memory")))))
+
+(defn write_aux (mem addr i)
+    (if (= i (len address))
+        (:< mem addr value)
+    (let (addr_bit (: address i) mask_bit (: mask i))
+        (if (= mask_bit "0")
+            (write_aux mem (+ addr (tuple addr_bit)) (inc i))
+        (if (= mask_bit "1")
+            (write_aux mem (+ addr (tuple "1")) (inc i))
+            (write_aux
+                (write_aux mem (+ addr (tuple "0")) (inc i))
+                (+ addr (tuple "1"))
+                (inc i)))))))
+
+(defn memory_write (memory address mask value)
+    (write_aux memory (tuple) 0))
+
+(defn process_instruction_part2 (state instruction)
+    (let (parts ((. split instruction)))
+        (if (= (first parts) "mask")
+            (:< state "mask" (: parts 2))
+            (let (value (int (: parts 2))
+                    address (int (slice (first parts) 4 (dec (len (first parts))))))
+                (:< state "memory" (memory_write
+                    (: state "memory")
+                    (format address "036b")
+                    (: state "mask")
+                    value))))))
+
+(defn mask_address (mask address)
+    (let (addr_bin (format address "036b"))
+        ((. join "") (map
+                (# if (= "0" (: mask %0))
+                    (: addr_bin %0)
+                (if (= "1" (: mask %0))
+                    "1"
+                    "X"))
+            (range (len mask))))))
+
+(defn map_instructions_to_write_addresses (accumulator instruction)
+    (let (parts ((. split instruction)))
+        (if (= (first parts) "mask")
+            (:< accumulator "mask" (: parts 2))
+            (let (value (int (: parts 2))
+                    address (int (slice (first parts) 4 (dec (len (first parts))))))
+                (:< accumulator "writes"
+                    (list$append (: accumulator "writes")
+                        (tuple (mask_address (: accumulator "mask") address) value)))))))
+
+(defn count_overlaps (mask1 mask2)
+    (letfn (aux (acc i)
+            (if (< i (len mask1))
+                (let (b1 (: mask1 i) b2 (: mask2 i))
+                    (if (and (= b1 "X") (= b2 "X"))
+                        (aux (* 2 acc) (inc i))
+                    (if (or (= b1 "X") (= b2 "X") (= b1 b2))
+                        (aux acc (inc i))
+                        0)))
+                acc))
+        (aux 1 0)))
+
+(defn count_total_locations (mask)
+    (let (num_xs (len (filter (# = %0 "X") mask)))
+        (** 2 num_xs)))
+
+(defn compute_total_instruction_writes (writes index)
+    (let ((addr_mask value) (: writes index))
+        (* value (max 0
+            (reduce (# - %0 (count_overlaps addr_mask (first (: writes %1))))
+                (count_total_locations addr_mask)
+                (range (inc index) (len writes)))))))
+
+(defn task2 ()
+    (let (writes (:
+            (reduce map_instructions_to_write_addresses
+                (dict (list "mask" (* "0" 36)) (list "writes" (list)))
+                lines)
+            "writes"))
+        (sum & (map (# compute_total_instruction_writes writes %0) (range (len writes))))))
+
+(do
+    (print (task1))
+    (print (task2)))
+

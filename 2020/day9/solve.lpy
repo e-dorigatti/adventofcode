@@ -1,0 +1,77 @@
+(comment https://adventofcode.com/2020/day/9)
+
+(def small_input False)
+(def fname (if small_input "small.txt" "input.txt"))
+(def preamble_length (if small_input 5 25))
+(def part1_answer (if small_input 127 14144619))
+
+(def numbers
+    (map int ((. readlines (open fname)))))
+
+(defn multiset_new ()
+    (dict))
+
+(defn multiset_add (multiset x)
+    (let (count (dict$get multiset x 0))
+        (:< multiset x (inc count))))
+
+(defn multiset_add_all (multiset items)
+    (reduce (# multiset_add %0 %1) multiset items))
+
+(defn multiset_del (multiset x)
+    (let (count (dict$get multiset x 0))
+        (if (<= count 0)
+            (do (print "lz" x) multiset)
+        (if (= count 1)
+            (do ((. pop multiset) x) multiset)
+            (:< multiset x (dec count))))))
+
+(defn multiset_contains (multiset x)
+    (< 0 (dict$get multiset x 0)))
+
+(defn multiset_items (multiset)
+    (list & (dict$keys multiset)))
+
+(def ms (multiset_add_all (multiset_new) (range 5)))
+
+(defns task1_aux (preamble i)
+    (let (num (: numbers i))
+        (if (< i preamble_length)
+            (task1_aux (multiset_add preamble num) (inc i))
+            (let (sums (filter
+                    (# multiset_contains preamble (- num %0))
+                    (multiset_items preamble)))
+                (if (empty? sums)
+                    num
+                    (task1_aux
+                        (multiset_del (multiset_add preamble num) (: numbers (- i preamble_length)))
+                        (inc i)))))))
+
+
+(defn task1 ()
+    (task1_aux (multiset_new) 0))
+
+(defns reduce_range (sum start)
+    (if (<= sum part1_answer)
+        (list sum start)
+        (reduce_range (- sum (: numbers start)) (inc start))))
+
+(defns task2_find_range (sum start i)
+    (if (= sum part1_answer)
+        (list start i)
+        (let (new_sum (+ sum (: numbers i)))
+            (if (< new_sum part1_answer)
+                (task2_find_range new_sum start (inc i))
+                (let ((reduced_sum new_start) (reduce_range new_sum start))
+                    (task2_find_range reduced_sum new_start (inc i)))))))
+
+(defn task2 ()
+    (let (
+            (start end) (task2_find_range (: numbers 0) 0 1)
+            interval_numbers (slice numbers start end))
+        (+ (min interval_numbers) (max interval_numbers))))
+
+(do
+    (print (task1))
+    (print (task2)))
+

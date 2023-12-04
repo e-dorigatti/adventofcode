@@ -1,0 +1,28 @@
+(comment https://adventofcode.com/2020/day/5)
+
+(defn seat_id (pass)
+    (int
+        ((. replace
+            ((. replace
+                ((. replace
+                    ((. replace pass) "B" "1"))
+                    "F" "0"))
+                "R" "1"))
+            "L" "0")
+        2))
+
+(defn task1 (passes)
+    (max (map seat_id passes)))
+
+(defn task2 (field)
+    (let (
+            all_seats (map seat_id passes)
+            no_previous (filter (# not (in (dec %0) all_seats)) all_seats))
+        (dec (max no_previous))))
+
+(def passes
+    ((. readlines (open "input.txt"))))
+
+(do
+    (print (task1 passes))
+    (print (task2 passes)))
