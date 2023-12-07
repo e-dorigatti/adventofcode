@@ -10,6 +10,7 @@ function solve_file(path::AbstractString, is_part_2::Bool)
     return solution
 end
 
+
 function solve_part1(input::AbstractString)
     lines = split(input, '\n')
     times = [parse(Int, x) for x in split(split(lines[1], ": ")[2], " ", keepempty=false)]
