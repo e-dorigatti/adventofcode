@@ -43,7 +43,7 @@ function print_mat(mat, title, hightlight=nothing)
 end
 
 
-function beam_step(beam, mat)
+function beam_step(beam::Beam, mat::Matrix{Char})::Bool
     if beam.blocked
         return false
     end
@@ -87,11 +87,11 @@ function beam_step(beam, mat)
 end
 
 
-function find_energized_tiles(mat, pos_i, pos_j, vel_i, vel_j)
+function find_energized_tiles(mat::Matrix{Char}, pos_i::Int, pos_j::Int, vel_i::Int, vel_j::Int)::Int
     beams = Set{Beam}([new_beam(pos_i, pos_j, vel_i, vel_j)])
-    beam_paths = Set()
+    beam_paths = Set{Tuple{Int, Int, Int, Int}}()
+    energized_tiles = Set{Tuple{Int, Int}}()
     dont_stop = true
-    i = 0
     while dont_stop
         dont_stop = false
         for be in beams
@@ -112,14 +112,8 @@ function find_energized_tiles(mat, pos_i, pos_j, vel_i, vel_j)
 
             if !be.blocked
                 dont_stop = true
+                push!(energized_tiles, (k[1], k[2]))
             end
-        end
-    end
-
-    energized_tiles = Set{Tuple{Int, Int}}()
-    for k in beam_paths
-        if k[1] >= 1 && k[1] <= lastindex(mat, 1) && k[2] >= 1 && k[2] <= lastindex(mat ,2)
-            push!(energized_tiles, (k[1], k[2]))
         end
     end
 
@@ -173,7 +167,6 @@ function solve_part2(input)
 
     return max_en
 end
-
 
 @assert 51 == solve_file("2023/inputs/day16-test.txt", true)
 
