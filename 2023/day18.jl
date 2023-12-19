@@ -101,6 +101,9 @@ function solve(input, row_parser)
     # the area computed is off by half of the perimeter
     # intuitively, because the splits cut each block exactly in half
     # still not sure why we need to add one...
+    # EDIT: turns out this solution is based on Pick's theorem
+    # https://en.wikipedia.org/wiki/Pick's_theorem
+    # live and learn
     perimeter = sum(
         dj - j for (i, j, dj) in h_splits
     ) + sum(
@@ -163,6 +166,8 @@ function compute_area(splits::Vector{Tuple{Int, Int, Int}})::Int
 
         # merge adjacent intervals
         # TODO could make it faster with an interval tree ?
+        # NB: the list is already "mostly" sorted so a clever algorithm choice
+        # should also help
         if !isempty(new_intervals)
             sort!(new_intervals)
             merged_intervals = Vector{Tuple{Int, Int}}()
